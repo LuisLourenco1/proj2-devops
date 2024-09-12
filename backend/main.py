@@ -23,12 +23,13 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Permite todas as origens
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Permite todos os métodos (GET, POST, etc.)
+    allow_headers=["*"],  # Permite todos os cabeçalhos
 )
 
 class User(BaseModel):
@@ -51,18 +52,22 @@ async def shutdown():
     await database.disconnect()
 
 @app.post("/register/")
-def register(user: User, db: Session = Depends(get_db)):
+async def register(user: User, db: Session = Depends(get_db)):
     db_user = db.query(UserModel).filter(UserModel.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
-    new_user = UserModel(username=user.username, password=user.password)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return {"message": "User registered successfully"}
+    try:
+        new_user = UserModel(username=user.username, password=user.password)
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return {"message": "User registered successfully"}
+    except Exception as e:
+        print(f"Error during registration: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @app.post("/login/")
-def login(user: User, db: Session = Depends(get_db)):
+async def login(user: User, db: Session = Depends(get_db)):
     db_user = db.query(UserModel).filter(UserModel.username == user.username).first()
     if not db_user:
         raise HTTPException(status_code=400, detail="User does not exist")
@@ -70,18 +75,26 @@ def login(user: User, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid username or password")
     if db_user.logged_in:
         raise HTTPException(status_code=400, detail="User already logged in")
-    db_user.logged_in = True
-    db.commit()
-    return {"message": "Login successful"}
+    try:
+        db_user.logged_in = True
+        db.commit()
+        return {"message": "Login successful"}
+    except Exception as e:
+        print(f"Error during login: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @app.delete("/delete/{username}")
-def delete_user(username: str, db: Session = Depends(get_db)):
+async def delete_user(username: str, db: Session = Depends(get_db)):
     db_user = db.query(UserModel).filter(UserModel.username == username).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    db.delete(db_user)
-    db.commit()
-    return {"message": "User deleted successfully"}
+    try:
+        db.delete(db_user)
+        db.commit()
+        return {"message": "User deleted successfully"}
+    except Exception as e:
+        print(f"Error during user deletion: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 if __name__ == "__main__":
     import uvicorn

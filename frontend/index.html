@@ -72,7 +72,6 @@
             <button type="submit">Delete User</button>
         </form>
     </div>
-
     <script>
         const handleResponse = async (response) => {
             const data = await response.json();
@@ -82,55 +81,70 @@
                 alert(data.message);
             }
         };
-
+    
         const registerForm = document.getElementById('registerForm');
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('registerUsername').value;
             const password = document.getElementById('registerPassword').value;
-
-            const response = await fetch('http://127.0.0.1:8000/register/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, password }),
-            });
-
-            handleResponse(response);
+    
+            try {
+                const response = await fetch('/api/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+                handleResponse(response);
+            } catch (error) {
+                console.error('Error during registration:', error);
+                alert('An error occurred during registration.');
+            }
+    
             document.getElementById('registerUsername').value = '';
             document.getElementById('registerPassword').value = '';
         });
-
+    
         const loginForm = document.getElementById('loginForm');
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
-
-            const response = await fetch('http://127.0.0.1:8000/login/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, password }),
-            });
-
-            handleResponse(response);
+    
+            try {
+                const response = await fetch('/api/login/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+                handleResponse(response);
+            } catch (error) {
+                console.error('Error during login:', error);
+                alert('An error occurred during login.');
+            }
+    
             document.getElementById('loginUsername').value = '';
             document.getElementById('loginPassword').value = '';
         });
-
+    
         const deleteForm = document.getElementById('deleteForm');
         deleteForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('deleteUsername').value;
-
-            const response = await fetch(`http://127.0.0.1:8000/delete/${username}`, {
-                method: 'DELETE',
-            });
-
-            handleResponse(response);
+    
+            try {
+                const response = await fetch(`/api/delete/${username}`, {
+                    method: 'DELETE',
+                });
+                handleResponse(response);
+            } catch (error) {
+                console.error('Error during user deletion:', error);
+                alert('An error occurred during user deletion.');
+            }
+    
             document.getElementById('deleteUsername').value = '';
         });
     </script>
